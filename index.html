@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BAYAR AMAN</title>
+
+<style>
+:root {
+  --red: #A6192E;
+  --dark: #7D1022;
+  --light: #FFF5F6;
+  --white: #FFFFFF;
+  --border: #E5C9CE;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #F3F3F3;
+  font-family: Arial, sans-serif;
+  color: #222;
+}
+
+.app {
+  max-width: 480px;
+  min-height: 100vh;
+  margin: auto;
+  background: white;
+  overflow: hidden;
+}
+
+header {
+  background: var(--red);
+  color: white;
+  padding: 18px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.page {
+  display: none;
+  min-height: calc(100vh - 60px);
+  padding: 20px;
+}
+
+.page.active {
+  display: block;
+}
+
+.hero {
+  background: linear-gradient(145deg, #FFF5F6, #F5D7DC);
+  border-radius: 18px;
+  padding: 22px 14px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.hero .brand {
+  color: var(--red);
+  font-size: 30px;
+  font-weight: 900;
+}
+
+.courier {
+  font-size: 65px;
+  margin: 10px 0;
+}
+
+.promo {
+  text-align: left;
+  line-height: 1.8;
+  font-size: 14px;
+}
+
+label {
+  display: block;
+  margin: 14px 0 7px;
+  font-weight: bold;
+}
+
+input {
+  width: 100%;
+  padding: 15px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 16px;
+  background: white;
+  color: #222;
+}
+
+button {
+  width: 100%;
+  padding: 15px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--red);
+  color: white;
+  font-size: 17px;
+  font-weight: bold;
+  margin-top: 15px;
+  cursor: pointer;
+}
+
+button:active {
+  background: var(--dark);
+}
+
+.secondary {
+  background: #777;
+}
+
+h2 {
+  color: var(--red);
+  text-align: center;
+  margin-top: 8px;
+}
+
+.info {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 15px;
+  line-height: 1.8;
+  margin-top: 15px;
+}
+
+.info strong {
+  color: var(--red);
+}
+
+.payment {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 15px;
+  margin-top: 10px;
+}
+
+.payment label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0;
+}
+
+.payment input {
+  width: 20px;
+  height: 20px;
+}
+
+.banner {
+  background: var(--light);
+  border-radius: 18px;
+  text-align: center;
+  padding: 22px 12px;
+  margin-bottom: 20px;
+}
+
+.banner .gift {
+  font-size: 65px;
+}
+
+.banner h2 {
+  margin: 8px 0;
+}
+
+.notice {
+  color: var(--red);
+  font-size: 14px;
+  line-height: 1.5;
+  margin-top: 12px;
+}
+
+footer {
+  padding: 12px;
+  text-align: center;
+  color: #777;
+  font-size: 12px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header id="header">
+  <div class="logo">🛡 BAYAR AMAN</div>
+</header>
+
+<!-- HALAMAN 1 -->
+<section class="page active" id="page1">
+
+  <div class="hero">
+    <div class="brand">BAYAR AMAN</div>
+    <div class="courier">🚚 📦</div>
+
+    <div class="promo">
+      🚚 Kirim barang aman.<br>
+      📱 Cek status pengiriman.<br>
+      ✅ Periksa barang saat tiba.<br>
+      💳 Konfirmasi pembayaran.
+    </div>
+  </div>
+
+  <h2>Layanan COD</h2>
+
+  <label for="phone">Nomor telepon</label>
+  <input
+    id="phone"
+    type="tel"
+    inputmode="numeric"
+    maxlength="15"
+    placeholder="Masukkan nomor HP Anda"
+  >
+
+  <button onclick="masuk()">MASUK</button>
+
+</section>
+
+<!-- HALAMAN 2 -->
+<section class="page" id="page2">
+
+  <h2>🔎 Cari Nomor Pesanan</h2>
+
+  <p style="text-align:center">
+    Masukkan nomor pesanan dari penjual
+    untuk melanjutkan.
+  </p>
+
+  <label for="order">Nomor pesanan</label>
+  <input
+    id="order"
+    type="text"
+    placeholder="Contoh: BA123456789"
+  >
+
+  <button onclick="cariPesanan()">
+    Cari Nomor Pesanan
+  </button>
+
+  <button class="secondary" onclick="showPage(1)">
+    Kembali
+  </button>
+
+</section>
+
+<!-- HALAMAN 3 -->
+<section class="page" id="page3">
+
+  <h2>Detail Pesanan</h2>
+
+  <div class="info">
+    <div><strong>Nama:</strong> <span id="nama">Menunggu data Admin</span></div>
+    <div><strong>Alamat:</strong> <span id="alamat">Menunggu data Admin</span></div>
+    <div><strong>Telp:</strong> <span id="telp">-</span></div>
+    <div><strong>Harga:</strong> <span id="harga">-</span></div>
+    <div><strong>Status pengiriman:</strong> <span id="status">-</span></div>
+    <div><strong>Detail produk:</strong> <span id="produk">-</span></div>
+  </div>
+
+  <h2>Pilih Metode Pembayaran</h2>
+
+  <div class="payment">
+    <label>
+      <input type="radio" name="payment" value="COD" checked>
+      Cash on delivery (COD)
+    </label>
+
+    <label>
+      <input type="radio" name="payment" value="LinkAja">
+      LinkAja
+    </label>
+  </div>
+
+  <div class="notice">
+    Periksa barang saat tiba. Lakukan pembayaran
+    setelah barang diterima dan diperiksa.
+  </div>
+
+  <button onclick="lanjutBayar()">Lanjutkan</button>
+
+  <button class="secondary" onclick="showPage(2)">
+    Kembali
+  </button>
+
+</section>
+
+<!-- HALAMAN 4 -->
+<section class="page" id="page4">
+
+  <div class="banner">
+    <div class="gift">🎁</div>
+    <h2>Daftar Sekarang</h2>
+    <h3>Anggota BAYAR AMAN</h3>
+
+    <h2>3 Kuota Gratis Ongkir</h2>
+
+    <p>✓ Belanja lebih hemat</p>
+    <p>✓ Pengiriman lebih aman</p>
+    <p>✓ Banyak keuntungan lainnya</p>
+  </div>
+
+  <label for="memberName">Nama lengkap</label>
+  <input id="memberName" placeholder="Masukkan nama lengkap">
+
+  <label for="memberPhone">Nomor telepon</label>
+  <input
+    id="memberPhone"
+    type="tel"
+    inputmode="numeric"
+    placeholder="Masukkan nomor HP"
+  >
+
+  <label for="memberAddress">Alamat lengkap</label>
+  <input id="memberAddress" placeholder="Masukkan alamat lengkap">
+
+  <button onclick="daftar()">Daftar Sekarang</button>
+
+  <button class="secondary" onclick="showPage(3)">
+    Kembali
+  </button>
+
+</section>
+
+<footer>
+  BAYAR AMAN — Belanja Online Lebih Aman
+</footer>
+
+</div>
+
+<script>
+function showPage(number) {
+  document.querySelectorAll(".page").forEach(function(page) {
+    page.classList.remove("active");
+  });
+
+  document.getElementById("page" + number).classList.add("active");
+
+  window.scrollTo(0, 0);
+}
+
+function masuk() {
+  const phone = document.getElementById("phone").value.trim();
+
+  if (!/^[0-9]{10,15}$/.test(phone)) {
+    alert("Masukkan nomor HP yang benar (10–15 angka).");
+    return;
+  }
+
+  showPage(2);
+}
+
+function cariPesanan() {
+  const order = document.getElementById("order").value.trim();
+
+  if (!order) {
+    alert("Masukkan nomor pesanan terlebih dahulu.");
+    return;
+  }
+
+  showPage(3);
+}
+
+function lanjutBayar() {
+  const payment = document.querySelector(
+    'input[name="payment"]:checked'
+  ).value;
+
+  if (payment === "COD") {
+    alert("Pastikan Anda sudah terdaftar sebagai anggota untuk menggunakan COD.");
+  } else {
+    alert("Periksa barang terlebih dahulu sebelum melakukan pembayaran.");
+  }
+
+  showPage(4);
+}
+
+function daftar() {
+  const name = document.getElementById("memberName").value.trim();
+  const phone = document.getElementById("memberPhone").value.trim();
+  const address = document.getElementById("memberAddress").value.trim();
+
+  if (!name || !/^[0-9]{10,15}$/.test(phone) || !address) {
+    alert("Lengkapi nama, nomor HP, dan alamat dengan benar.");
+    return;
+  }
+
+  alert("Formulir pendaftaran berhasil diisi. Koneksi ke Admin akan ditambahkan pada tahap berikutnya.");
+}
+</script>
+
+</body>
+</html>
