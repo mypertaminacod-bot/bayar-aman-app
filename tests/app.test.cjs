@@ -13,3 +13,22 @@ test('Admin-reported journey position requires verification and is unique',()=>{
  assert.throws(()=>validate([{...base,current:'true'}]),/tidak valid/);
  assert.throws(()=>validate([{...base,current:true,lat:null,lng:null}]),/terverifikasi/);
 });
+
+test('Admin route controls exist and are wired to the order update flow',()=>{
+ const html=fs.readFileSync(path.join(root,'admin.html'),'utf8');
+ const js=fs.readFileSync(path.join(root,'admin.js'),'utf8');
+ for(const id of ['startTripBtn','arrivedBtn','changeLocationBtn']){
+  assert.match(html,new RegExp('id="'+id+'"'));
+  assert.ok(js.includes("$('"+id+"').addEventListener('click'"),'Missing click handler for '+id);
+ }
+ assert.match(js,/admin_update_order/);
+ assert.match(js,/p_expected_updated_at:selectedVersion/);
+});
+test('User page 3 displays route before details and receives realtime updates',()=>{
+ const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+ const js=fs.readFileSync(path.join(root,'user.js'),'utf8');
+ const page3=html.slice(html.indexOf('id="page3"'),html.indexOf('id="page4"'));
+ assert.ok(page3.indexOf('id="routeView"')<page3.indexOf('Rincian Pesanan'));
+ assert.match(js,/postgres_changes/);
+ assert.match(js,/refreshDetail/);
+});
