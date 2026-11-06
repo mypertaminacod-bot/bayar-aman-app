@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg"><defs>
+<symbol id="phone" viewBox="0 0 24 24"><path d="M5 3h4l2 5-3 2c2 4 3 5 6 6l2-3 5 2v4c-1 5-9 1-13-3S0 4 5 3Z"/></symbol>
+<symbol id="box" viewBox="0 0 24 24"><path d="m3 6 9-4 9 4v12l-9 4-9-4Zm0 0 9 5 9-5M12 11v11M7 4l10 5"/></symbol>
+<symbol id="search" viewBox="0 0 24 24"><circle cx="10" cy="10" r="7"/><path d="m15 15 7 7"/></symbol>
+<symbol id="search-box" viewBox="0 0 80 80"><circle cx="39" cy="31" r="23"/><path d="m56 49 20 22M22 64H2M17 53H5M14 42H2M26 23l13-7 13 7v16l-13 7-13-7Zm0 0 13 7 13-7M39 30v16M32 20l13 7"/></symbol>
+<symbol id="truck" viewBox="0 0 70 40"><path d="M12 5h32v25H12M44 14h13l9 10v6H44M51 15v9h13M2 11h20M4 18h17M1 25h18"/><circle cx="25" cy="31" r="5"/><circle cx="55" cy="31" r="5"/></symbol>
+<symbol id="shield" viewBox="0 0 24 24"><path d="m12 2 9 4v7c0 4-6 8-9 10-3-2-9-6-9-10V6Zm-5 10 3 3 7-7"/></symbol>
+<symbol id="wallet" viewBox="0 0 24 24"><path d="M21 7H3V4l14-2v5M3 7v14h18V7M21 11h-7v6h7"/><circle cx="17" cy="14" r=".5"/></symbol>
+<symbol id="check" viewBox="0 0 24 24"><path d="m3 12 6 6L21 5"/></symbol>
+<symbol id="pin" viewBox="0 0 24 24"><path d="M20 9c0 6-8 13-8 13S4 15 4 9a8 8 0 0 1 16 0Z"/><circle cx="12" cy="9" r="3"/></symbol>
+<symbol id="user" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M3 22v-3a9 9 0 0 1 18 0v3Z"/></symbol>
+<symbol id="members" viewBox="0 0 60 48"><circle cx="29" cy="9" r="7"/><circle cx="10" cy="15" r="5"/><circle cx="49" cy="15" r="5"/><path d="M17 43V32a12 12 0 0 1 24 0v11ZM3 41V30a7 7 0 0 1 11-6M46 24a7 7 0 0 1 11 6v11"/></symbol>
+<symbol id="user-plus" viewBox="0 0 24 24"><circle cx="8" cy="6" r="4"/><path d="M1 22v-5a7 7 0 0 1 14 0v5ZM19 7v10M14 12h10"/></symbol>
+<symbol id="home" viewBox="0 0 24 24"><path d="m2 11 10-9 10 9M5 9v13h14V9M9 22v-8h6v8"/></symbol>
+<symbol id="mail" viewBox="0 0 24 24"><path d="M2 4h20v16H2Zm0 0 10 9L22 4"/></symbol>
+<symbol id="lock" viewBox="0 0 24 24"><path d="M6 10V7a6 6 0 0 1 12 0v3M4 10h16v12H4Z"/><path d="M12 15v3"/></symbol>
+<symbol id="eye" viewBox="0 0 24 24"><path d="M1 12S5 5 12 5s11 7 11 7-4 7-11 7S1 12 1 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="gift" viewBox="0 0 60 60"><path d="M5 27h50v-9H5Zm4 0v28h42V27M25 18v37M35 18v37M30 18C2 18 15-5 25 8l5 10c28 0 15-23 5-10Z"/></symbol>
+</defs></svg>
