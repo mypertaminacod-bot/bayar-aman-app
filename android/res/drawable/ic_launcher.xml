@@ -1,1 +1,19 @@
-<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108"><path android:fillColor="#A6192E" android:pathData="M0,0H108V108H0Z"/><path android:fillColor="#FFFFFF" android:pathData="M54,22L84,37L54,52L24,37ZM24,42L51,56V86L24,72ZM57,56L84,42V72L57,86Z"/></vector>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+ android:width="108dp" android:height="108dp"
+ android:viewportWidth="108" android:viewportHeight="108">
+ <!-- BAYAR AMAN: approved maroon delivery, parcel and shield identity. -->
+ <path android:fillColor="#A6192E" android:pathData="M0,0H108V108H0Z"/>
+ <path android:fillColor="#FFFFFF" android:pathData="M14,62L24,49H58L66,62V79H14Z"/>
+ <path android:fillColor="#FFFFFF" android:pathData="M66,56H82L94,68V79H66Z"/>
+ <path android:fillColor="#A6192E" android:pathData="M73,60H81L87,67H73Z"/>
+ <path android:fillColor="#FFFFFF" android:pathData="M21,79a8,8 0,1 0,16 0a8,8 0,1 0,-16 0"/>
+ <path android:fillColor="#FFFFFF" android:pathData="M73,79a8,8 0,1 0,16 0a8,8 0,1 0,-16 0"/>
+ <path android:fillColor="#A6192E" android:pathData="M26,79a3,3 0,1 0,6 0a3,3 0,1 0,-6 0"/>
+ <path android:fillColor="#A6192E" android:pathData="M78,79a3,3 0,1 0,6 0a3,3 0,1 0,-6 0"/>
+ <path android:fillColor="#FFFFFF" android:pathData="M22,30L36,23L50,30L36,37Z"/>
+ <path android:fillColor="#FFFFFF" android:pathData="M22,33L34,39V51L22,45Z"/>
+ <path android:fillColor="#FFFFFF" android:pathData="M38,39L50,33V45L38,51Z"/>
+ <path android:fillColor="#FFFFFF" android:pathData="M68,18L86,25V40Q85,53 68,61Q51,53 50,40V25Z"/>
+ <path android:fillColor="#A6192E" android:pathData="M68,24L80,29V40Q79,49 68,55Q57,49 56,40V29Z"/>
+ <path android:fillColor="#FFFFFF" android:pathData="M60,39L65,44L76,32L79,36L65,51L57,43Z"/>
+</vector>
