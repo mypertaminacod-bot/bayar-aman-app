@@ -17,6 +17,8 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - name: Enforce approved User and Admin design and flow lock
+        run: node tests/design-lock.cjs
       - run: npm test
       - name: Test database migrations in isolated local PostgreSQL
         run: npm run test:db
@@ -59,9 +61,10 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
-      - name: Install Android platform
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - name: Install Android platform using runner SDK
+        run: |
+          echo "y" | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-35" "build-tools;35.0.0"
       - name: Bundle User and Admin web pages
         run: |
           mkdir -p android/app/src/main/assets
