@@ -27,3 +27,11 @@
 #page3 .payment-note small{font-size:11px;font-weight:600}
 
 .route-position{animation:routeBlink 1s steps(2,start) infinite}@media(prefers-reduced-motion:reduce){.route-position{animation:none}}
+
+/* Owner-approved safety guidance, User page 3 only */
+.safety-guidance{margin:20px 0 28px;padding:20px 18px;border:1px solid #ead6da;border-radius:14px;background:#fff;color:#29252a;line-height:1.6}
+.safety-guidance h2{margin:0 0 12px;color:#a6192e;font-size:1.12rem}
+.safety-guidance ul{padding-left:22px;margin:0 0 16px}
+.safety-guidance li{margin:0 0 12px}
+.safety-guidance p{margin:12px 0 0}
+.safety-guidance p:last-child{text-align:right;color:#a6192e}
