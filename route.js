@@ -3,15 +3,21 @@
   'use strict';
   function validate(value) {
     if (!Array.isArray(value) || value.length > 30) throw new Error('Rute harus berupa array maksimal 30 titik.');
-    return value.map(point => {
+    let currentCount = 0;
+    const normalized = value.map(point => {
       if (!point || typeof point !== 'object' || Array.isArray(point)) throw new Error('Titik rute tidak valid.');
-      const {address, lat = null, lng = null, verified = false, source = ''} = point;
+      const {address, lat = null, lng = null, verified = false, source = '', current = false} = point;
       if (typeof address !== 'string' || !address.trim() || address.length > 1000 || typeof verified !== 'boolean' || typeof source !== 'string' || source.length > 1000) throw new Error('Alamat/sumber rute tidak valid.');
       if ((lat === null) !== (lng === null)) throw new Error('Isi kedua koordinat atau kosongkan keduanya.');
       if (lat !== null && (typeof lat !== 'number' || !Number.isFinite(lat) || Math.abs(lat) > 90 || typeof lng !== 'number' || !Number.isFinite(lng) || Math.abs(lng) > 180)) throw new Error('Koordinat di luar batas.');
+      if (typeof current !== 'boolean') throw new Error('Penanda posisi tidak valid.');
+      if (current && (!verified || lat === null)) throw new Error('Posisi perjalanan memerlukan koordinat terverifikasi.');
+      if (current) currentCount++;
       if (verified && (lat === null || !source.trim())) throw new Error('Koordinat terverifikasi memerlukan koordinat lengkap dan sumber verifikasi.');
-      return {address: address.trim(), lat, lng, verified, source: source.trim()};
+      return {address: address.trim(), lat, lng, verified, source: source.trim(), current};
     });
+    if (currentCount > 1) throw new Error('Hanya satu posisi perjalanan boleh aktif.');
+    return normalized;
   }
   function render(container, value) {
     container.replaceChildren();
@@ -19,7 +25,7 @@
     try { points = validate(value || []); } catch (_) { container.textContent = 'Data rute tidak valid. Hubungi Admin.'; return; }
     if (!points.length) { container.textContent = 'Rute belum tersedia dari Admin.'; return; }
     const note = document.createElement('p');
-    note.textContent = 'Urutan titik dari Admin; bukan posisi GPS kurir atau bukti barang sedang dikirim. Titik berkedip hanya penanda rute.';
+    note.textContent = 'Urutan titik dari Admin; bukan posisi GPS kurir atau bukti barang sedang dikirim. Titik berkedip menunjukkan posisi yang ditandai Admin, bukan GPS langsung.';
     container.appendChild(note);
     // Zoomable route overview is only shown for coordinates verified by Admin.
     // This is a schematic connecting verified stops, not a road route or live GPS.
@@ -55,7 +61,7 @@
         const dot = document.createElementNS(svgNS, 'circle');
         dot.setAttribute('cx', String(x)); dot.setAttribute('cy', String(y));
         dot.setAttribute('r', '6'); dot.setAttribute('fill', '#d00020');
-        if (i === 0) {
+        if (p.current) {
           const animate = document.createElementNS(svgNS, 'animate');
           animate.setAttribute('attributeName', 'opacity'); animate.setAttribute('values', '1;0;1');
           animate.setAttribute('dur', '1s'); animate.setAttribute('repeatCount', 'indefinite');
@@ -100,8 +106,8 @@
     }
     points.forEach((p, i) => {
       const el = document.createElement('div'); el.className = 'route-point';
-      const dot = document.createElement('span'); dot.className = 'route-dot'; dot.setAttribute('aria-hidden', 'true');
-      const label = document.createElement('p'); label.textContent = (i + 1) + '. Alamat yang dimasukkan: ' + p.address;
+      const dot = document.createElement('span'); dot.className = 'route-dot'; dot.setAttribute('aria-hidden', 'true'); if (!p.current) dot.style.animation = 'none';
+      const label = document.createElement('p'); label.textContent = (i + 1) + '. ' + (p.current ? 'Posisi perjalanan menurut Admin: ' : 'Alamat yang dimasukkan: ') + p.address;
       const coords = document.createElement('p');
       coords.textContent = p.verified ? 'Koordinat terverifikasi oleh Admin: ' + p.lat + ', ' + p.lng + ' · Sumber: ' + p.source : 'Koordinat belum diverifikasi.';
       el.append(dot, label, coords); container.appendChild(el);
