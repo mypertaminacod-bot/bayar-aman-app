@@ -72,6 +72,27 @@
         btn.addEventListener('click', () => setZoom(zoom + delta));
         controls.appendChild(btn);
       }
+      // Pinch zoom for Android touchscreens; never infer live courier coordinates.
+      const distance = touches => Math.hypot(touches[0].clientX - touches[1].clientX, touches[0].clientY - touches[1].clientY);
+      let pinchStart = null;
+      let zoomStart = 1;
+      viewport.style.touchAction = 'pan-x pan-y';
+      viewport.addEventListener('touchstart', event => {
+        if (event.touches.length === 2) {
+          pinchStart = distance(event.touches);
+          zoomStart = zoom;
+        }
+      }, {passive:true});
+      viewport.addEventListener('touchmove', event => {
+        if (event.touches.length === 2 && pinchStart > 0) {
+          event.preventDefault();
+          setZoom(zoomStart * distance(event.touches) / pinchStart);
+        }
+      }, {passive:false});
+      viewport.addEventListener('touchend', event => {
+        if (event.touches.length < 2) pinchStart = null;
+      }, {passive:true});
+      viewport.addEventListener('touchcancel', () => { pinchStart = null; }, {passive:true});
       viewport.appendChild(svg);
       const info = document.createElement('p'); info.className = 'tiny';
       info.textContent = 'Skema titik terverifikasi Admin, bukan peta jalan atau lokasi GPS langsung.';
