@@ -76,6 +76,19 @@ jobs:
           curl --fail --location --silent --show-error https://services.gradle.org/distributions/gradle-8.11.1-bin.zip -o /tmp/gradle.zip
           unzip -q /tmp/gradle.zip -d /tmp
           /tmp/gradle-8.11.1/bin/gradle --no-daemon :app:assembleUserDebug :app:assembleAdminDebug
+      - name: Verify APK package identities and bundled entry pages
+        working-directory: android
+        run: |
+          set -euo pipefail
+          USER_APK=$(find app/build/outputs/apk/user/debug -maxdepth 1 -name '*.apk' -print -quit)
+          ADMIN_APK=$(find app/build/outputs/apk/admin/debug -maxdepth 1 -name '*.apk' -print -quit)
+          test -s "$USER_APK" && test -s "$ADMIN_APK"
+          AAPT="$ANDROID_HOME/build-tools/35.0.0/aapt"
+          "$AAPT" dump badging "$USER_APK" | grep -F "package: name='id.bayaraman.mobile.user'"
+          "$AAPT" dump badging "$ADMIN_APK" | grep -F "package: name='id.bayaraman.mobile.admin'"
+          unzip -l "$USER_APK" | grep -F 'assets/index.html'
+          unzip -l "$ADMIN_APK" | grep -F 'assets/admin.html'
+          sha256sum "$USER_APK" "$ADMIN_APK"
       - name: Upload User APK
         uses: actions/upload-artifact@v4
         with:
