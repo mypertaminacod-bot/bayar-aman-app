@@ -23,10 +23,8 @@ jobs:
       - name: Install Chromium for mobile-browser integration tests
         run: npx playwright install --with-deps chromium
       - name: Test User and Admin browser flows (simulated Supabase)
-        env:
-          CHROMIUM_PATH: /home/runner/.cache/ms-playwright/chromium-*/chrome-linux/chrome
         run: |
-          CHROME=$(find "$HOME/.cache/ms-playwright" -type f -name chrome -path '*/chrome-linux*/chrome' | head -n 1)
+          CHROME=$(find "$HOME/.cache/ms-playwright" -type f \( -name chrome -o -name headless_shell \) | head -n 1)
           if [ -z "$CHROME" ]; then echo 'Chromium executable missing'; exit 1; fi
           CHROMIUM_PATH="$CHROME" npm run test:browser
       - name: Package User and Admin preview
