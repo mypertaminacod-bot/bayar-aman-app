@@ -1,0 +1,9 @@
+{
+  "name": "bayar-aman-app",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/app.test.cjs",
+    "test:browser": "node tests/browser.cjs"
+  },
+  "devDependencies": {"playwright": "1.62.1"}
+}
