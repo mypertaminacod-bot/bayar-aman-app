@@ -18,6 +18,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      - name: Test database migrations in isolated local PostgreSQL
+        run: npm run test:db
       - name: Package User and Admin preview
         run: |
           mkdir -p preview
