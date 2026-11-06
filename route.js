@@ -62,10 +62,7 @@
         dot.setAttribute('cx', String(x)); dot.setAttribute('cy', String(y));
         dot.setAttribute('r', '6'); dot.setAttribute('fill', '#d00020');
         if (p.current) {
-          const animate = document.createElementNS(svgNS, 'animate');
-          animate.setAttribute('attributeName', 'opacity'); animate.setAttribute('values', '1;0;1');
-          animate.setAttribute('dur', '1s'); animate.setAttribute('repeatCount', 'indefinite');
-          dot.appendChild(animate);
+          dot.classList.add('route-position');
         }
         svg.appendChild(dot);
       });

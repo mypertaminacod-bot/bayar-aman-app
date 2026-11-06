@@ -40,7 +40,8 @@ jobs:
         run: |
           mkdir -p preview
           cp index.html admin.html user.js admin.js route.js app.css config.js icons.svg preview/
-          cd preview && zip -q ../bayar-aman-preview.zip *
+          cp -r vendor preview/
+          cd preview && zip -qr ../bayar-aman-preview.zip .
       - name: Upload Android browser preview ZIP
         uses: actions/upload-artifact@v4
         with:
