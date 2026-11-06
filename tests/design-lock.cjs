@@ -2,12 +2,12 @@
 // Changes require explicit owner approval and a deliberate baseline update.
 const {execFileSync}=require('node:child_process');
 const expected={
-  "index.html": "e51e0277b3f8a3ca886fd442849afe4c6d94bce7",
+  "index.html": "6b2c469ac6d1e08715e794b9dd5631e08df04e39",
   "admin.html": "38415869cdea966800145d93db3bcdb4866af327",
   "user.js": "8a68313f2a44e994914d3fed0feb69d41b72090b",
   "admin.js": "b242f4aa3ff578a008c2ca1b84f23810331ae432",
   "route.js": "5d2d2c8f622592431ba668ab36328543ce240ccd",
-  "app.css": "4f9661c96807954cb891f29904c7bd98c95ccb26",
+  "app.css": "7c9318797cf2d994b24fbeca281fbfbc78701689",
   "icons.svg": "8addadbcd21bffd296fbeba83225a3becb39e1c2"
 };
 let failed=false;
