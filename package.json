@@ -3,7 +3,12 @@
   "private": true,
   "scripts": {
     "test": "node --test tests/app.test.cjs",
-    "test:browser": "node tests/browser.cjs"
+    "test:browser": "node tests/browser.cjs",
+    "test:db": "node tests/database.cjs",
+    "test:all": "npm test && npm run test:db && npm run test:browser"
   },
-  "devDependencies": {"playwright": "1.62.1"}
+  "devDependencies": {
+    "@electric-sql/pglite": "0.3.14",
+    "playwright": "1.62.1"
+  }
 }
