@@ -26,7 +26,16 @@ jobs:
         run: |
           CHROME=$(find "$HOME/.cache/ms-playwright" -type f \( -name chrome -o -name headless_shell \) | head -n 1)
           if [ -z "$CHROME" ]; then echo 'Chromium executable missing'; exit 1; fi
-          CHROMIUM_PATH="$CHROME" npm run test:browser
+          mkdir -p screenshots
+          SCREENSHOT_DIR="$PWD/screenshots" CHROMIUM_PATH="$CHROME" npm run test:browser
+      - name: Upload actual mobile browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bayar-aman-mobile-screenshots
+          path: screenshots/*.png
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Package User and Admin preview
         run: |
           mkdir -p preview
