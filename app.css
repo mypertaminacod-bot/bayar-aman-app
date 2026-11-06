@@ -4,3 +4,12 @@
 .admin-grid>*,.admin-panel,.metrics>div,.brand-title{min-width:0}.brand-title h1{overflow-wrap:anywhere}.route-editor-point{min-inline-size:0}.grid2>*{min-width:0}
 
 .admin-root[data-view=incoming] #editorPanel,.admin-root[data-view=incoming] #entryPanel{display:none}.admin-root[data-view=incoming] .admin-grid{grid-template-columns:1fr}
+
+/* Page 3 shipment-label styling follows the approved reference without altering data values. */
+.shipping-label{margin:10px;border:1px dashed #777;background:#fff;overflow:hidden}
+.shipping-label-head{display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px dashed #777;padding:8px;color:#a6192e;font-size:12px}
+.shipping-label .details{margin:0;padding:10px;font-size:12px;grid-template-columns:94px minmax(0,1fr);gap:5px 8px}
+.shipping-label .details dt,.shipping-label .details dd{border-bottom:1px dotted #d8cbd0;padding-bottom:5px}
+.barcode{display:block;flex:0 0 92px;height:40px;border:2px solid white;background:repeating-linear-gradient(90deg,#171717 0px,#171717 2px,#fff 2px,#fff 4px,#171717 4px,#171717 5px,#fff 5px,#fff 9px,#171717 9px,#171717 12px,#fff 12px,#fff 14px)}
+.route-card{margin:0 0 14px;border-radius:0;padding:10px}
+.route-map-controls{display:flex;gap:8px;margin:8px 0}
