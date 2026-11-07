@@ -1,0 +1,84 @@
+(()=>{'use strict';const $=id=>document.getElementById(id),cfg=window.BAYAR_AMAN_CONFIG;const db=window.supabase?.createClient(cfg.supabaseUrl,cfg.supabasePublishableKey,{auth:{storageKey:"bayar-aman-admin",persistSession:true,autoRefreshToken:true}});let accessEpoch=0;let records=[],selectedId=null,selectedVersion=null,channel=null,refreshing=false,poller=null;
+const text=(id,val)=>$(id).textContent=val??'';const busy=(id,val)=>$(id).disabled=val;function notify(e){console.error('Admin:',e);return e?.message||'Gagal terhubung.'}
+function clean(v){return String(v??'').trim()}function recordTime(r){const d=new Date(r.created_at||r.data?.submitted_at||Date.now());return isNaN(d)?'—':d.toLocaleString('id-ID')}
+function showAdmin(on){$('loginPanel').classList.toggle('hidden',on);$('dashboard').classList.toggle('hidden',!on);$('logout').classList.toggle('hidden',!on);text('authState',on?'Admin aktif':'Belum masuk');$('adminTitle').textContent=on?'BAYAR AMAN – Dashboard Admin':'BAYAR AMAN Admin'}
+async function verifyAdmin(){// This RPC must return TRUE only for authorized admin accounts. Never infer admin status from ability to read own rows.
+const {data,error}=await db.rpc('is_admin');if(error)throw new Error('Verifikasi Admin gagal. Fungsi is_admin() harus tersedia untuk akun Admin. '+error.message);if(data!==true)throw new Error('Akun ini tidak memiliki izin Admin.');return true}
+async function load(){if(refreshing)return;refreshing=true;const epoch=accessEpoch;try{await verifyAdmin();const data=[];for(let offset=0;;offset+=500){const result=await db.rpc('bayar_aman_admin_events',{p_offset:offset,p_limit:500});if(result.error)throw result.error;data.push(...(result.data||[]));if((result.data||[]).length<500)break;if(epoch!==accessEpoch)return;}if(epoch!==accessEpoch)return;records=data||[];render();text('updateStatus','Terakhir diperbarui: '+new Date().toLocaleTimeString('id-ID')+' · '+records.length+' entri')}catch(e){if(epoch===accessEpoch){await clearAccess();text('loginStatus','Akses atau koneksi gagal. Masuk kembali. '+notify(e))}}finally{refreshing=false}}
+function render(){text('statProcess',records.filter(r=>r.data?.type==='nomor_pesanan'&&r.data?.detail_pesanan?.status&&!/selesai|dibatalkan/i.test(r.data.detail_pesanan.status)).length);text('statPhone',records.filter(r=>r.data?.type==='nomor_hp').length);text('statOrders',records.filter(r=>r.data?.type==='nomor_pesanan').length);text('statMembers',records.filter(r=>r.data?.type==='pendaftaran').length);
+const q=clean($('search').value).toLowerCase(),f=$('filter').value,table=$('rows');table.replaceChildren();const list=records.filter(r=>(!f||r.data?.type===f)&&(!q||JSON.stringify(r.data).toLowerCase().includes(q)));for(const r of list){const tr=document.createElement('tr');tr.dataset.id=r.id;const d=r.data||{};for(const v of [recordTime(r),d.type||'—',d.phone||'—',d.order_number||d.name||'—']){const cell=document.createElement('td');cell.textContent=v;tr.appendChild(cell)}const status=document.createElement('td'),badge=document.createElement('span');badge.className='status-pill'+(d.member_status==='active'?' active':'');badge.textContent=d.type==='pendaftaran'?(d.member_status==='active'?'Anggota aktif':'Pendaftaran lama'):(d.detail_pesanan?.status||'Menunggu');status.append(badge);tr.append(status);const action=document.createElement('td'),edit=document.createElement('button');edit.type='button';edit.className='btn small';edit.textContent=d.type==='nomor_pesanan'?'Edit':'Lihat';edit.addEventListener('click',e=>{e.stopPropagation();selectRow(r.id)});action.append(edit);tr.append(action);tr.addEventListener('click',()=>selectRow(r.id));table.appendChild(tr)}if(!list.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=6;td.textContent='Belum ada data yang sesuai.';tr.appendChild(td);table.appendChild(tr)}}
+function selectRow(id){selectedId=id;const r=records.find(r=>String(r.id)===String(id));if(!r)return;selectedVersion=r.updated_at;const d=r.data||{};text('entryDetail',JSON.stringify({waktu:recordTime(r),...d},null,2));text('saveStatus','');$('routeJson').value=JSON.stringify(d.route||[],null,2);window.BayarRoute.render($('routePreview'),d.route);renderRouteFields(d.route||[]);const order=d.type==='nomor_pesanan';setTab(order?'editor':'history');busy('saveBtn',!order);busy('startTripBtn',!order);busy('arrivedBtn',!order);busy('changeLocationBtn',!order);text('selected',order?'Pesanan: '+d.order_number+' | HP: '+d.phone:'Entri ini bukan nomor pesanan. Pilih entri nomor pesanan untuk mengubah detail.');const v=d.detail_pesanan||{};for(const [id,key] of [['dName','name'],['dPhone','phone'],['dAddress','address'],['dPrice','price'],['dStatus','status'],['dProduct','product']])$(id).value=v[key]||''}
+async function save(e){e.preventDefault();const r=records.find(r=>String(r.id)===String(selectedId));if(!r||r.data?.type!=='nomor_pesanan')return;busy('saveBtn',true);try{await verifyAdmin();const detail={};for(const [id,key] of [['dName','name'],['dPhone','phone'],['dAddress','address'],['dPrice','price'],['dStatus','status'],['dProduct','product']]){detail[key]=clean($(id).value);if(!detail[key])throw new Error('Lengkapi detail dengan data terverifikasi.')}const route=window.BayarRoute.validate(JSON.parse($('routeJson').value||'[]'));const {data,error}=await db.rpc('admin_update_order',{p_id:String(r.id),p_expected_updated_at:selectedVersion,p_detail:detail,p_route:route});if(error)throw error;if(!data)throw new Error('Tidak ada baris diperbarui. Muat ulang data.');await load();selectRow(r.id);text('saveStatus','Perubahan tersimpan.')}catch(er){text('saveStatus','Gagal menyimpan: '+notify(er))}finally{busy('saveBtn',false)}}
+function connectRealtime(){if(channel)db.removeChannel(channel);channel=db.channel('bayar-aman-admin').on('postgres_changes',{event:'*',schema:'public',table:'user_data'},()=>load()).subscribe(status=>{text('authState',status==='SUBSCRIBED'?'Realtime tersambung':'Koneksi terputus · diperiksa berkala');if(status==='SUBSCRIBED')load()});if(poller)clearInterval(poller);poller=setInterval(()=>{if(!document.hidden)load()},10000)}
+async function clearAccess(){accessEpoch++;showAdmin(false);records=[];selectedId=null;$('rows').replaceChildren();text('entryDetail','');$('orderForm').reset();$('routePreview').replaceChildren();$('routeFields').replaceChildren();for(const id of ['statPhone','statOrders','statMembers','statProcess'])text(id,'0');$('adminPassword').value='';busy('saveBtn',true);busy('startTripBtn',true);busy('arrivedBtn',true);busy('changeLocationBtn',true);if(poller)clearInterval(poller);if(channel){const old=channel;channel=null;await db.removeChannel(old)}}
+async function enter(){try{const epoch=accessEpoch;await verifyAdmin();if(epoch!==accessEpoch)return;showAdmin(true);await load();if(epoch===accessEpoch)connectRealtime()}catch(e){await clearAccess();await db.auth.signOut();text('loginStatus',notify(e))}}
+$('loginForm').addEventListener('submit',async e=>{e.preventDefault();text('loginStatus','');busy('loginBtn',true);try{if(!db)throw new Error('Pustaka Supabase belum dimuat. Periksa internet.');const {error}=await db.auth.signInWithPassword({email:clean($('adminEmail').value),password:$('adminPassword').value});if(error)throw error;$('adminPassword').value='';await enter()}catch(er){text('loginStatus',notify(er))}finally{busy('loginBtn',false)}});
+$('startTripBtn').addEventListener('click',()=>{const r=records.find(r=>String(r.id)===String(selectedId));if(!r||r.data?.type!=='nomor_pesanan'){text('saveStatus','Pilih pesanan terlebih dahulu.');return;}try{const route=window.BayarRoute.validate(JSON.parse($('routeJson').value||'[]'));if(route.length<2)throw new Error('Isi minimal titik awal dan tujuan sebelum mulai perjalanan.');if(!route[0].verified||!route[route.length-1].verified)throw new Error('Verifikasi koordinat titik awal dan tujuan terlebih dahulu.');if(!route.some(p=>p.current)){route[0].current=true;$('routeJson').value=JSON.stringify(route,null,2);renderRouteFields(route);window.BayarRoute.render($('routePreview'),route)}$('dStatus').value='Dalam Perjalanan';$('orderForm').requestSubmit();}catch(e){text('saveStatus',e.message)}});
+$('arrivedBtn').addEventListener('click',()=>{try{const route=window.BayarRoute.validate(JSON.parse($('routeJson').value||'[]'));if(route.length<2||!route[route.length-1].verified)throw new Error('Verifikasi titik tujuan sebelum menandai telah tiba.');route.forEach(p=>{p.current=false});route[route.length-1].current=true;$('routeJson').value=JSON.stringify(route,null,2);renderRouteFields(route);window.BayarRoute.render($('routePreview'),route);$('dStatus').value='Telah Tiba';$('orderForm').requestSubmit()}catch(e){text('saveStatus',e.message)}});
+$('changeLocationBtn').addEventListener('click',()=>{try{const route=window.BayarRoute.validate(JSON.parse($('routeJson').value||'[]'));if(!route.some(p=>p.current))throw new Error('Pilih satu posisi terverifikasi melalui kotak Posisi perjalanan saat ini.');text('saveStatus','Simpan posisi baru ke User.');$('orderForm').requestSubmit()}catch(e){text('saveStatus',e.message)}});
+$('logout').addEventListener('click',async()=>{await clearAccess();await db.auth.signOut()});$('orderForm').addEventListener('submit',save);$('search').addEventListener('input',render);$('filter').addEventListener('change',render);
+
+function setTab(tab){document.querySelector('.admin-root').dataset.view=tab;document.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tab===tab)));$('historyTitle').textContent=tab==='history'?'Riwayat / Laporan':'Data Masuk (Realtime)'}
+for(const b of document.querySelectorAll('[data-tab]'))b.addEventListener('click',()=>setTab(b.dataset.tab));
+$('togglePassword').addEventListener('click',()=>{const show=$('adminPassword').type==='password';$('adminPassword').type=show?'text':'password';$('togglePassword').setAttribute('aria-pressed',String(show));$('togglePassword').setAttribute('aria-label',show?'Sembunyikan password':'Tampilkan password')});
+function renderRouteFields(points){$('routeFields').replaceChildren();points.forEach((p,index)=>{const group=document.createElement('fieldset');group.className='route-editor-point';const title=document.createElement('legend');title.textContent='Titik '+(index+1);group.append(title);for(const [key,label,type] of [['address','Alamat','text'],['lat','Latitude','number'],['lng','Longitude','number'],['source','Sumber verifikasi','text']]){const wrap=document.createElement('label');wrap.textContent=label;const input=document.createElement('input');input.type=type;input.dataset.key=key;input.value=p[key]??'';if(type==='number')input.step='any';input.addEventListener('input',syncRouteFields);wrap.append(input);group.append(wrap)}const verifiedLabel=document.createElement('label'),check=document.createElement('input');check.type='checkbox';check.dataset.key='verified';check.checked=p.verified===true;check.addEventListener('change',syncRouteFields);verifiedLabel.append(check,document.createTextNode(' Koordinat terverifikasi'));group.append(verifiedLabel);const positionLabel=document.createElement('label'),position=document.createElement('input');position.type='checkbox';position.dataset.key='current';position.checked=p.current===true;position.addEventListener('change',()=>{if(position.checked){$('routeFields').querySelectorAll('[data-key="current"]').forEach(other=>{if(other!==position)other.checked=false})}syncRouteFields()});positionLabel.append(position,document.createTextNode(' Posisi perjalanan saat ini (menurut Admin)'));group.append(positionLabel);const remove=document.createElement('button');remove.type='button';remove.className='btn secondary small';remove.textContent='Hapus Titik';remove.addEventListener('click',()=>{group.remove();syncRouteFields()});group.append(remove);$('routeFields').append(group)})}
+function syncRouteFields(){const points=Array.from($('routeFields').children,group=>{const p={};group.querySelectorAll('[data-key]').forEach(input=>{p[input.dataset.key]=input.type==='checkbox'?input.checked:input.type==='number'?(input.value===''?null:Number(input.value)):input.value});return p});$('routeJson').value=JSON.stringify(points,null,2);window.BayarRoute.render($('routePreview'),points)}
+$('addRoute').addEventListener('click',()=>{try{const points=JSON.parse($('routeJson').value||'[]');if(points.length>=30)throw new Error('Maksimal 30 titik.');points.push({address:'',lat:null,lng:null,verified:false,source:''});renderRouteFields(points);syncRouteFields()}catch(e){text('saveStatus',e.message)}});
+$('routeJson').addEventListener('change',()=>{try{const points=window.BayarRoute.validate(JSON.parse($('routeJson').value||'[]'));renderRouteFields(points);window.BayarRoute.render($('routePreview'),points)}catch(e){text('saveStatus',e.message)}});
+
+if(db)db.auth.onAuthStateChange((event,session)=>{if(!session||event==='SIGNED_OUT')void clearAccess()});
+if(db)db.auth.getSession().then(async({data})=>{if(data.session)await enter()}).catch(e=>text('loginStatus',notify(e)));
+
+
+/* Password recovery uses the deployed Admin page, never localhost. */
+const recoveryRequestForm=$('recoveryRequestForm'),recoveryUpdateForm=$('recoveryUpdateForm');
+const recoveryStatus=$('recoveryStatus');
+function recoveryMessage(message){recoveryStatus.textContent=message}
+$('forgotPasswordBtn').addEventListener('click',()=>{
+  recoveryRequestForm.classList.toggle('hidden');
+  recoveryUpdateForm.classList.add('hidden');
+  $('recoveryEmail').value=$('adminEmail').value;
+  recoveryMessage('');
+});
+recoveryRequestForm.addEventListener('submit',async event=>{
+  event.preventDefault();
+  if(!db){recoveryMessage('Koneksi autentikasi belum tersedia.');return}
+  const email=$('recoveryEmail').value.trim();
+  const redirectTo=new URL('admin.html',window.location.href).href;
+  if(!/^https:\/\//i.test(redirectTo)){recoveryMessage('Pemulihan hanya tersedia melalui situs HTTPS yang telah dipublikasikan.');return}
+  const button=recoveryRequestForm.querySelector('button[type="submit"]');
+  button.disabled=true;
+  try{
+    const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo});
+    if(error)throw error;
+    recoveryMessage('Jika email terdaftar, tautan pemulihan akan dikirim. Periksa kotak masuk dan spam.');
+  }catch(error){recoveryMessage('Gagal meminta pemulihan: '+(error.message||'Periksa koneksi dan konfigurasi redirect Supabase.'))}
+  finally{button.disabled=false}
+});
+if(db)db.auth.onAuthStateChange((event)=>{
+  if(event==='PASSWORD_RECOVERY'){
+    $('loginPanel').classList.remove('hidden');
+    recoveryRequestForm.classList.add('hidden');
+    recoveryUpdateForm.classList.remove('hidden');
+    recoveryMessage('Masukkan password baru untuk akun Admin.');
+  }
+});
+recoveryUpdateForm.addEventListener('submit',async event=>{
+  event.preventDefault();
+  const password=$('recoveryNewPassword').value;
+  if(password.length<12){recoveryMessage('Password minimal 12 karakter.');return}
+  if(password!==$('recoveryConfirmPassword').value){recoveryMessage('Konfirmasi password tidak cocok.');return}
+  const button=recoveryUpdateForm.querySelector('button[type="submit"]');
+  button.disabled=true;
+  try{
+    const {error}=await db.auth.updateUser({password});
+    if(error)throw error;
+    recoveryMessage('Password diperbarui. Silakan masuk kembali sebagai Admin.');
+    recoveryUpdateForm.reset();
+    recoveryUpdateForm.classList.add('hidden');
+    await db.auth.signOut();
+  }catch(error){recoveryMessage('Gagal menyimpan password: '+(error.message||'Coba lagi.'))}
+  finally{button.disabled=false}
+});
+
+})();
