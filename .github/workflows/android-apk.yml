@@ -2,7 +2,7 @@ name: BAYAR AMAN Android APK
 on:
   workflow_dispatch:
   push:
-    branches: [review/bayar-aman-recovery]
+    branches: [review/bayar-aman-recovery, fix/admin-password-recovery-20261106]
     paths:
       - 'android/**'
       - 'index.html'
