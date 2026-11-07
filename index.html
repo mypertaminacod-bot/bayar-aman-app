@@ -58,7 +58,7 @@ window.BAYAR_AMAN_CONFIG=Object.freeze({
 </script><script>(()=>{'use strict';
 const $=id=>document.getElementById(id),cfg=window.BAYAR_AMAN_CONFIG;
 const client=window.supabase?.createClient(cfg.supabaseUrl,cfg.supabasePublishableKey,{auth:{persistSession:true,autoRefreshToken:true}});
-let uid=null,phone='',orderNumber='',orderRowId=null,orderChannel=null,loadingTimer=null;
+let uid=null,phone='',orderNumber='',orderRowId=null,orderChannel=null,loadingTimer=null,orderSubmitPromise=null,orderAttemptSequence=0;
 function message(n,s){$('msg'+n).textContent=s||''}function active(n){for(const p of document.querySelectorAll('.screen'))p.classList.remove('active');$('page'+n).classList.add('active');scrollTo({top:0,behavior:'instant'});document.title='BAYAR AMAN — '+({1:'Layanan COD',2:'Cari Nomor Pesanan',3:'Detail Pesanan',4:'Daftar Anggota',5:'Pendaftaran',6:'Informasi Penting'}[n]||'')}
 function working(btn,b){btn.disabled=b;btn.setAttribute('aria-busy',String(b))}
 function safeErr(e){console.error('BAYAR AMAN:',e);return e?.message||'Periksa koneksi internet dan coba kembali.'}
@@ -70,9 +70,34 @@ function applyDetail(d){renderRoute(d?.route);const obj=d?.detail_pesanan;if(!ob
 async function refreshDetail(){if(!orderRowId||!uid)return;const {data,error}=await client.from('user_data').select('data').eq('id',orderRowId).eq('user_id',uid).maybeSingle();if(!error&&data)applyDetail(data.data)}
 function trackOrder(){if(!client||!orderRowId)return;if(orderChannel)client.removeChannel(orderChannel);orderChannel=client.channel('pesanan-'+orderRowId).on('postgres_changes',{event:'UPDATE',schema:'public',table:'user_data',filter:'id=eq.'+orderRowId},p=>applyDetail(p.new?.data)).subscribe()}
 async function onPhone(){const el=$('go1');message(1,'');phone=$('phone').value.trim();if(!/^[0-9]{10,15}$/.test(phone)){message(1,'Masukkan nomor HP yang benar (10–15 angka).');return}working(el,true);try{await insert({type:'nomor_hp',phone});$('memberPhone').value=phone;active(2)}catch(e){message(1,'Data belum terkirim. '+safeErr(e))}finally{working(el,false)}}
-async function onOrder(){const el=$('go2');message(2,'');orderNumber=$('order').value.trim();if(!orderNumber){message(2,'Masukkan nomor pesanan terlebih dahulu.');return}working(el,true);try{orderRowId=await insert({type:'nomor_pesanan',phone,order_number:orderNumber});clearDetails();active(3);trackOrder();await refreshDetail()}catch(e){message(2,'Nomor pesanan belum terkirim. '+safeErr(e))}finally{working(el,false)}}
+function onOrder(){
+ message(2,'');
+ const enteredOrder=$('order').value.trim();
+ if(!enteredOrder){message(2,'Masukkan nomor pesanan terlebih dahulu.');return}
+ orderNumber=enteredOrder;
+ orderRowId=null;
+ if(orderChannel){client.removeChannel(orderChannel);orderChannel=null}
+ const attempt=++orderAttemptSequence,submittedPhone=phone,submittedOrder=orderNumber;
+ clearDetails();
+ active(3);
+ message(3,'Mengirim nomor pesanan ke Admin...');
+ orderSubmitPromise=(async()=>{
+  try{
+   const newOrderId=await insert({type:'nomor_pesanan',phone:submittedPhone,order_number:submittedOrder});
+   if(attempt!==orderAttemptSequence)return;
+   orderRowId=newOrderId;
+   trackOrder();
+   await refreshDetail();
+   if(attempt===orderAttemptSequence)message(3,'');
+  }catch(e){
+   if(attempt===orderAttemptSequence)message(3,'Nomor pesanan belum berhasil dikirim ke Admin. Periksa koneksi lalu kembali ke halaman kedua untuk mencoba kembali. '+safeErr(e));
+  }finally{
+   if(attempt===orderAttemptSequence)orderSubmitPromise=null;
+  }
+ })();
+}
 async function isMember(){const {data,error}=await client.from('user_data').select('data').eq('user_id',uid).limit(300);if(error)throw error;return (data||[]).some(r=>r.data?.type==='pendaftaran'&&r.data?.phone===phone)}
-async function onConfirm(){const el=$('go3'),payment=document.querySelector('input[name="payment"]:checked')?.value;message(3,'');if(!payment){message(3,'Silahkan pilih metode pembayaran dulu');return}working(el,true);try{await insert({type:'metode_pembayaran',phone,order_number:orderNumber,payment});if(payment==='COD'&&!(await isMember())){$('memberDialog').showModal()}else{ $('registrationSuccess').textContent='';active(6)}}catch(e){message(3,'Konfirmasi belum tersimpan. '+safeErr(e))}finally{working(el,false)}}
+async function onConfirm(){const el=$('go3'),payment=document.querySelector('input[name="payment"]:checked')?.value;message(3,'');if(!payment){message(3,'Silahkan pilih metode pembayaran dulu');return}if(!orderRowId){message(3,orderSubmitPromise?'Nomor pesanan sedang dikirim ke Admin. Coba konfirmasi beberapa saat lagi.':'Nomor pesanan belum terkirim ke Admin. Kembali ke halaman kedua dan coba lagi.');return}working(el,true);try{await insert({type:'metode_pembayaran',phone,order_number:orderNumber,order_id:orderRowId,payment});if(payment==='COD'&&!(await isMember())){$('memberDialog').showModal()}else{ $('registrationSuccess').textContent='';active(6)}}catch(e){message(3,'Konfirmasi belum tersimpan. '+safeErr(e))}finally{working(el,false)}}
 function registerDone(){let remaining=10;$('waitTime').textContent=remaining+' detik';active(5);if(loadingTimer)clearInterval(loadingTimer);loadingTimer=setInterval(()=>{remaining--;if(remaining>0){$('waitTime').textContent=remaining+' detik'}else{clearInterval(loadingTimer);loadingTimer=null;$('registrationSuccess').textContent='Pendaftaran anggota telah aktif. Anda dapat menggunakan layanan COD.';active(6)}},1000)}
 async function onRegister(){const el=$('go4');message(4,'');const name=$('memberName').value.trim(),memberPhone=$('memberPhone').value.trim(),address=$('memberAddress').value.trim(),email=$('memberEmail').value.trim();if(!name||!address||!/^[0-9]{10,15}$/.test(memberPhone)){message(4,'Lengkapi nama, nomor HP (10–15 angka), dan alamat.');return}if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){message(4,'Masukkan alamat email yang valid.');return}working(el,true);try{await insert({type:'pendaftaran',name,phone:memberPhone,address,email,free_shipping_quota:3});registerDone()}catch(e){message(4,'Pendaftaran belum tersimpan. '+safeErr(e))}finally{working(el,false)}}
 $('registerForm').addEventListener('submit',e=>{e.preventDefault();onRegister()});$('go1').addEventListener('click',onPhone);$('go2').addEventListener('click',onOrder);$('go3').addEventListener('click',onConfirm);$('go4').addEventListener('click',onRegister);$('dialogOk').addEventListener('click',()=>{$('memberDialog').close();active(4)});$('done').addEventListener('click',()=>{window.location.reload()});for(const b of document.querySelectorAll('[data-page]'))b.addEventListener('click',()=>active(+b.dataset.page));$('phone').addEventListener('keydown',e=>{if(e.key==='Enter')onPhone()});$('order').addEventListener('keydown',e=>{if(e.key==='Enter')onOrder()});
