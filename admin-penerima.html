@@ -21,6 +21,28 @@ function showEvents(){
     field.append(label,content);article.append(field);
    }
    if(r.data?.phone){const use=document.createElement('button');use.className='subtle';use.type='button';use.textContent='Gunakan nomor HP ini di Detail Penerima';use.onclick=()=>{$('phone').value=String(r.data.phone);$('phone').focus();$('editor').scrollIntoView({behavior:'smooth',block:'start'})};article.append(use)}
+
+   if(r.data?.type==='nomor_pesanan'&&r.data?.phone){
+     const send=document.createElement('button');
+     send.className='subtle';send.type='button';
+     send.textContent='Kirim Detail Penerima Tersimpan ke User';
+     send.onclick=async()=>{
+       const digits=v=>String(v||'').replace(/[^0-9]/g,'');
+       const match=rows.find(item=>digits(item.phone)===digits(r.data.phone));
+       if(!match){$('eventsStatus').textContent='Belum ada Detail Penerima tersimpan untuk nomor HP ini. Isi dan Simpan Detail Penerima terlebih dahulu.';return}
+       if(!confirm('Kirim detail penerima '+match.name+' ke pesanan '+String(r.data.order_number||'')+'? Pastikan nomor HP dan penerima benar.'))return;
+       send.disabled=true;
+       try{
+         const detail={name:match.name,phone:match.phone,address:match.address,price:match.price,status:match.status,product:match.product};
+         const result=await db.rpc('admin_update_order',{p_id:String(r.id),p_expected_updated_at:r.updated_at,p_detail:detail,p_route:match.route||[]});
+         if(result.error)throw result.error;
+         $('eventsStatus').textContent='Detail Penerima dikirim ke pesanan User. User dapat melihatnya di halaman ketiga.';
+         await loadEvents();
+       }catch(e){$('eventsStatus').textContent='Gagal mengirim detail: '+err(e)}
+       finally{send.disabled=false}
+     };
+     article.append(send);
+   }
    list.append(article);
  }
 }
