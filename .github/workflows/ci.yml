@@ -1,7 +1,7 @@
 name: BAYAR AMAN checks
 on:
   pull_request:
-    branches: [main]
+    branches: [main, review/bayar-aman-recovery]
   push:
     branches: [review/bayar-aman-recovery]
 permissions:
