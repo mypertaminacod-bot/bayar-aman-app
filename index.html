@@ -96,10 +96,53 @@ function onOrder(){
   }
  })();
 }
-async function isMember(){const {data,error}=await client.from('user_data').select('data').eq('user_id',uid).limit(300);if(error)throw error;return (data||[]).some(r=>r.data?.type==='pendaftaran'&&r.data?.phone===phone)}
-async function onConfirm(){const el=$('go3'),payment=document.querySelector('input[name="payment"]:checked')?.value;message(3,'');if(!payment){message(3,'Silahkan pilih metode pembayaran dulu');return}if(!orderRowId){message(3,orderSubmitPromise?'Nomor pesanan sedang dikirim ke Admin. Coba konfirmasi beberapa saat lagi.':'Nomor pesanan belum terkirim ke Admin. Kembali ke halaman kedua dan coba lagi.');return}working(el,true);try{await insert({type:'metode_pembayaran',phone,order_number:orderNumber,order_id:orderRowId,payment});if(payment==='COD'&&!(await isMember())){$('memberDialog').showModal()}else{ $('registrationSuccess').textContent='';active(6)}}catch(e){message(3,'Konfirmasi belum tersimpan. '+safeErr(e))}finally{working(el,false)}}
+async function isMember(){await session();const {data,error}=await client.rpc('bayar_aman_my_membership',{p_phone:phone});if(error)throw error;return data?.status==='active'}
+async function onConfirm(){
+ const el=$('go3'),payment=document.querySelector('input[name="payment"]:checked')?.value;
+ message(3,'');
+ if(!payment){message(3,'Silahkan pilih metode pembayaran dulu');return}
+ working(el,true);
+ try{
+  if(payment==='COD'&&!(await isMember())){
+   $('memberPhone').value=phone;
+   if(!$('memberDialog').open)$('memberDialog').showModal();
+   return;
+  }
+  if(!orderRowId){
+   message(3,orderSubmitPromise?'Nomor pesanan sedang dikirim ke Admin. Coba konfirmasi sebentar lagi.':'Nomor pesanan belum terkirim ke Admin. Kembali ke halaman kedua untuk mencoba lagi.');
+   return;
+  }
+  await insert({type:'metode_pembayaran',phone,order_number:orderNumber,order_id:orderRowId,payment});
+  $('registrationSuccess').textContent='';
+  active(6);
+ }catch(e){
+  message(3,'Konfirmasi belum tersimpan. '+safeErr(e))
+ }finally{working(el,false)}
+}
 function registerDone(){let remaining=10;$('waitTime').textContent=remaining+' detik';active(5);if(loadingTimer)clearInterval(loadingTimer);loadingTimer=setInterval(()=>{remaining--;if(remaining>0){$('waitTime').textContent=remaining+' detik'}else{clearInterval(loadingTimer);loadingTimer=null;$('registrationSuccess').textContent='Pendaftaran anggota telah aktif. Anda dapat menggunakan layanan COD.';active(6)}},1000)}
-async function onRegister(){const el=$('go4');message(4,'');const name=$('memberName').value.trim(),memberPhone=$('memberPhone').value.trim(),address=$('memberAddress').value.trim(),email=$('memberEmail').value.trim();if(!name||!address||!/^[0-9]{10,15}$/.test(memberPhone)){message(4,'Lengkapi nama, nomor HP (10–15 angka), dan alamat.');return}if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){message(4,'Masukkan alamat email yang valid.');return}working(el,true);try{await insert({type:'pendaftaran',name,phone:memberPhone,address,email,free_shipping_quota:3});registerDone()}catch(e){message(4,'Pendaftaran belum tersimpan. '+safeErr(e))}finally{working(el,false)}}
+async function onRegister(){
+ const el=$('go4');
+ message(4,'');
+ const name=$('memberName').value.trim(),memberPhone=$('memberPhone').value.trim(),address=$('memberAddress').value.trim(),email=$('memberEmail').value.trim();
+ if(!name||!address||!/^[0-9]{10,15}$/.test(memberPhone)){message(4,'Lengkapi nama, nomor HP (10–15 angka), dan alamat.');return}
+ if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){message(4,'Masukkan alamat email yang valid.');return}
+ if(memberPhone!==phone){message(4,'Nomor HP pendaftaran harus sama dengan nomor HP yang digunakan saat masuk: '+phone);return}
+ working(el,true);
+ try{
+  if(orderSubmitPromise){message(4,'Menyelesaikan pengiriman nomor pesanan...');await orderSubmitPromise}
+  if(!orderRowId)throw new Error('Nomor pesanan belum tersimpan. Kembali ke halaman kedua, isi nomor pesanan dan lanjutkan lagi.');
+  await session();
+  message(4,'Menyimpan dan mengaktifkan keanggotaan...');
+  const {data,error}=await client.rpc('bayar_aman_register_member',{
+   p_name:name,p_phone:memberPhone,p_address:address,p_email:email,p_order_id:String(orderRowId)
+  });
+  if(error)throw error;
+  if(data?.status!=='active')throw new Error('Status anggota belum aktif. Periksa kembali ke Admin.');
+  registerDone();
+ }catch(e){
+  message(4,'Pendaftaran belum tersimpan. '+safeErr(e))
+ }finally{working(el,false)}
+}
 $('registerForm').addEventListener('submit',e=>{e.preventDefault();onRegister()});$('go1').addEventListener('click',onPhone);$('go2').addEventListener('click',onOrder);$('go3').addEventListener('click',onConfirm);$('go4').addEventListener('click',onRegister);$('dialogOk').addEventListener('click',()=>{$('memberDialog').close();active(4)});$('done').addEventListener('click',()=>{window.location.reload()});for(const b of document.querySelectorAll('[data-page]'))b.addEventListener('click',()=>active(+b.dataset.page));$('phone').addEventListener('keydown',e=>{if(e.key==='Enter')onPhone()});$('order').addEventListener('keydown',e=>{if(e.key==='Enter')onOrder()});
 
 // Polling is a fallback for projects without Realtime publication configured.
