@@ -1,8 +1,9 @@
 name: BAYAR AMAN Android APK
+# Rebuild Admin Uji with separate application ID to avoid conflict with installed Admin.
 on:
   workflow_dispatch:
   push:
-    branches: [review/bayar-aman-recovery]
+    branches: [review/bayar-aman-recovery, fix/admin-password-recovery-20261106]
     paths:
       - 'android/**'
       - 'index.html'

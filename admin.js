@@ -29,4 +29,56 @@ $('routeJson').addEventListener('change',()=>{try{const points=window.BayarRoute
 if(db)db.auth.onAuthStateChange((event,session)=>{if(!session||event==='SIGNED_OUT')void clearAccess()});
 if(db)db.auth.getSession().then(async({data})=>{if(data.session)await enter()}).catch(e=>text('loginStatus',notify(e)));
 
+
+/* Password recovery uses the deployed Admin page, never localhost. */
+const recoveryRequestForm=$('recoveryRequestForm'),recoveryUpdateForm=$('recoveryUpdateForm');
+const recoveryStatus=$('recoveryStatus');
+function recoveryMessage(message){recoveryStatus.textContent=message}
+$('forgotPasswordBtn').addEventListener('click',()=>{
+  recoveryRequestForm.classList.toggle('hidden');
+  recoveryUpdateForm.classList.add('hidden');
+  $('recoveryEmail').value=$('adminEmail').value;
+  recoveryMessage('');
+});
+recoveryRequestForm.addEventListener('submit',async event=>{
+  event.preventDefault();
+  if(!db){recoveryMessage('Koneksi autentikasi belum tersedia.');return}
+  const email=$('recoveryEmail').value.trim();
+  const redirectTo=new URL('admin.html',window.location.href).href;
+  if(!/^https:\/\//i.test(redirectTo)){recoveryMessage('Pemulihan hanya tersedia melalui situs HTTPS yang telah dipublikasikan.');return}
+  const button=recoveryRequestForm.querySelector('button[type="submit"]');
+  button.disabled=true;
+  try{
+    const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo});
+    if(error)throw error;
+    recoveryMessage('Jika email terdaftar, tautan pemulihan akan dikirim. Periksa kotak masuk dan spam.');
+  }catch(error){recoveryMessage('Gagal meminta pemulihan: '+(error.message||'Periksa koneksi dan konfigurasi redirect Supabase.'))}
+  finally{button.disabled=false}
+});
+if(db)db.auth.onAuthStateChange((event)=>{
+  if(event==='PASSWORD_RECOVERY'){
+    $('loginPanel').classList.remove('hidden');
+    recoveryRequestForm.classList.add('hidden');
+    recoveryUpdateForm.classList.remove('hidden');
+    recoveryMessage('Masukkan password baru untuk akun Admin.');
+  }
+});
+recoveryUpdateForm.addEventListener('submit',async event=>{
+  event.preventDefault();
+  const password=$('recoveryNewPassword').value;
+  if(password.length<12){recoveryMessage('Password minimal 12 karakter.');return}
+  if(password!==$('recoveryConfirmPassword').value){recoveryMessage('Konfirmasi password tidak cocok.');return}
+  const button=recoveryUpdateForm.querySelector('button[type="submit"]');
+  button.disabled=true;
+  try{
+    const {error}=await db.auth.updateUser({password});
+    if(error)throw error;
+    recoveryMessage('Password diperbarui. Silakan masuk kembali sebagai Admin.');
+    recoveryUpdateForm.reset();
+    recoveryUpdateForm.classList.add('hidden');
+    await db.auth.signOut();
+  }catch(error){recoveryMessage('Gagal menyimpan password: '+(error.message||'Coba lagi.'))}
+  finally{button.disabled=false}
+});
+
 })();

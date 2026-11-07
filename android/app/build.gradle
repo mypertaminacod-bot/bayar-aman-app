@@ -6,7 +6,7 @@ android {
   flavorDimensions 'role'
   productFlavors {
     user { dimension 'role'; applicationIdSuffix '.user'; resValue 'string', 'app_name', 'BAYAR AMAN User'; buildConfigField 'String', 'START_PAGE', '"index.html"' }
-    admin { dimension 'role'; applicationIdSuffix '.admin'; resValue 'string', 'app_name', 'BAYAR AMAN Admin'; buildConfigField 'String', 'START_PAGE', '"admin.html"' }
+    admin { dimension 'role'; applicationIdSuffix '.adminuji'; resValue 'string', 'app_name', 'BAYAR AMAN Admin Uji'; buildConfigField 'String', 'START_PAGE', '"admin.html"' }
   }
   buildFeatures { buildConfig true }
   compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
