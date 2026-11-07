@@ -1,4 +1,5 @@
 name: BAYAR AMAN Android APK
+# Rebuild Admin Uji with separate application ID to avoid conflict with installed Admin.
 on:
   workflow_dispatch:
   push:
